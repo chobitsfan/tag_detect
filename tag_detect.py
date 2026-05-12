@@ -17,22 +17,27 @@ class ImageSubscriber(Node):
         self.cnt = 0
     def callback(self, msg):
         self.cnt += 1
-        if self.cnt > 4:
+        if self.cnt > 7:
             self.cnt = 0
             image = np.frombuffer(msg.data, dtype=np.uint8).reshape((msg.height, msg.width))
-            detections = self.detector.detect(image)
-            if detections:
-                center = detections[0]['center']
-                x = (center[0] - cx) / fx
-                y = (center[1] - cy) / fy
-                z = 1.0
-                v = np.array([x, y, z])
-                dir = v / np.linalg.norm(v)
-                print(dir)
-                dir_msg = Vector3()
-                dir_msg.x = dir[2]
-                dir_msg.y = dir[0]
-                dir_msg.z = dir[1]
+            tags = self.detector.detect(image)
+            if tags:
+                for tag in tags:
+                    if tag['id'] == 0:
+                        center = tag['center']
+                        x = (center[0] - cx) / fx
+                        y = (center[1] - cy) / fy
+                        z = 1.0
+                        v = np.array([x, y, z])
+                        dir = v / np.linalg.norm(v)
+                        print(dir)
+                        dir_msg = Vector3()
+                        dir_msg.x = dir[2]
+                        dir_msg.y = dir[0]
+                        dir_msg.z = dir[1]
+                    else:
+                        dir_msg = Vector3()
+                        break
                 self.dir_pub.publish(dir_msg)
 
 def main(args=None):

@@ -27,20 +27,29 @@ class ImageSubscriber(Node):
             if tags:
                 for tag in tags:
                     if tag['id'] == 0:
-                        center = tag['center']
-                        x = (center[0] - self.cx) / self.fx
-                        y = (center[1] - self.cy) / self.fy
-                        z = 1.0
-                        v = np.array([x, y, z])
-                        dir = v / np.linalg.norm(v)
-                        print(dir)
-                        dir_msg = Vector3()
-                        dir_msg.x = dir[2]
-                        dir_msg.y = dir[0]
-                        dir_msg.z = dir[1]
-                    elif tag['id'] == 1:
-                        print("tag 1 found")
-                        dir_msg = Vector3()
+                        (lb_x, lb_y), (rb_x, rb_y), _, _ = tag["lb-rb-rt-lt"]
+                        dx = rb_x - lb_x
+                        dy = rb_y - lb_y
+                        edge_sq = dx * dx + dy * dy
+                        if edge_sq > 1600:
+                            print("close to tag")
+                            dir_msg = Vector3()
+                        else:
+                            if edge_sq < 900:
+                                spd_scale = 0.55
+                            else:
+                                spd_scale = 0.5
+                            center = tag['center']
+                            x = (center[0] - self.cx) / self.fx
+                            y = (center[1] - self.cy) / self.fy
+                            z = 1.0
+                            v = np.array([x, y, z])
+                            dir = v / np.linalg.norm(v) * spd_scale
+                            print(dir, edge_sq)
+                            dir_msg = Vector3()
+                            dir_msg.x = dir[2]
+                            dir_msg.y = dir[0]
+                            dir_msg.z = dir[1]
                         break
                 self.dir_pub.publish(dir_msg)
 
